@@ -5,6 +5,8 @@ const fetch = require('node-fetch');
 const path = require('path');
 const dns = require('dns');
 const net = require('net');
+const http = require('http');
+const https = require('https');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -61,13 +63,22 @@ function isPrivateOrReservedIP(ip) {
   return true; // reject unknown address families
 }
 
-async function resolveHostname(hostname) {
-  return new Promise((resolve, reject) => {
-    dns.lookup(hostname, { all: true }, (err, addresses) => {
-      if (err) return reject(err);
-      resolve(addresses.map(a => a.address));
+// Build a custom DNS lookup function that blocks private/reserved IPs.
+// This is used as the `lookup` option on http/https agents so that every
+// TCP connection (including across HTTP redirects) is validated, which
+// prevents DNS-rebinding / TOCTOU attacks.
+function makeSafeLookup() {
+  return function safeLookup(hostname, options, callback) {
+    dns.lookup(hostname, { all: true, ...options }, (err, addresses) => {
+      if (err) return callback(err);
+      const safe = addresses.filter(a => !isPrivateOrReservedIP(a.address));
+      if (safe.length === 0) {
+        return callback(new Error('Hostname resolves to a private or reserved address.'));
+      }
+      const chosen = safe[0];
+      callback(null, chosen.address, chosen.family);
     });
-  });
+  };
 }
 
 app.post('/extract', async (req, res) => {
@@ -81,7 +92,6 @@ app.post('/extract', async (req, res) => {
     return res.status(400).json({ error: 'Please provide a valid http or https URL.' });
   }
 
-  // SSRF protection: resolve the hostname and reject private/reserved IPs.
   let parsedUrl;
   try {
     parsedUrl = new URL(url);
@@ -89,20 +99,17 @@ app.post('/extract', async (req, res) => {
     return res.status(400).json({ error: 'Please provide a valid http or https URL.' });
   }
 
-  let resolvedAddresses;
-  try {
-    resolvedAddresses = await resolveHostname(parsedUrl.hostname);
-  } catch {
-    return res.status(502).json({ error: 'Could not resolve the hostname. Make sure it is publicly accessible.' });
-  }
-
-  if (resolvedAddresses.some(isPrivateOrReservedIP)) {
-    return res.status(400).json({ error: 'Requests to private or internal addresses are not allowed.' });
-  }
+  // Use a custom agent whose DNS lookup rejects private/reserved addresses.
+  // This prevents SSRF (including DNS-rebinding attacks) at the TCP level.
+  const safeLookup = makeSafeLookup();
+  const agent = parsedUrl.protocol === 'https:'
+    ? new https.Agent({ lookup: safeLookup })
+    : new http.Agent({ lookup: safeLookup });
 
   let response;
   try {
     response = await fetch(url, {
+      agent,
       headers: {
         'User-Agent': 'Mozilla/5.0 (compatible; SaunaReader/1.0)',
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
@@ -112,6 +119,13 @@ app.post('/extract', async (req, res) => {
       size: 5 * 1024 * 1024, // 5 MB limit
     });
   } catch (err) {
+    const msg = err.message || '';
+    if (msg.includes('private or reserved')) {
+      return res.status(400).json({ error: 'Requests to private or internal addresses are not allowed.' });
+    }
+    if (msg.includes('resolve') || msg.includes('ENOTFOUND') || msg.includes('EAI_AGAIN')) {
+      return res.status(502).json({ error: 'Could not resolve the hostname. Make sure it is publicly accessible.' });
+    }
     return res.status(502).json({ error: 'Could not fetch the URL. Make sure it is publicly accessible.' });
   }
 
