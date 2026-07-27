@@ -7,21 +7,13 @@ const dns = require('dns');
 const net = require('net');
 const http = require('http');
 const https = require('https');
+const { isValidUrl, normalizeTweetUrl } = require('./urlUtils');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
-
-function isValidUrl(string) {
-  try {
-    const url = new URL(string);
-    return url.protocol === 'http:' || url.protocol === 'https:';
-  } catch {
-    return false;
-  }
-}
 
 // Reject requests to private / reserved IP ranges to prevent SSRF.
 function isPrivateOrReservedIP(ip) {
@@ -82,7 +74,7 @@ function makeSafeLookup() {
 }
 
 app.post('/extract', async (req, res) => {
-  const { url } = req.body;
+  let { url } = req.body;
 
   if (!url || typeof url !== 'string') {
     return res.status(400).json({ error: 'A URL is required.' });
@@ -91,6 +83,10 @@ app.post('/extract', async (req, res) => {
   if (!isValidUrl(url)) {
     return res.status(400).json({ error: 'Please provide a valid http or https URL.' });
   }
+
+  // Normalise x.com tweet links to twitter.com so both domains share the
+  // same fetch pipeline and produce identical results.
+  url = normalizeTweetUrl(url);
 
   let parsedUrl;
   try {
@@ -161,4 +157,3 @@ app.post('/extract', async (req, res) => {
 app.listen(PORT, () => {
   console.log(`Sauna Reader running at http://localhost:${PORT}`);
 });
-
