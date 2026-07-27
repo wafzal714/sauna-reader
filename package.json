@@ -1,0 +1,28 @@
+{
+  "name": "sauna-reader",
+  "version": "1.0.0",
+  "description": "Paste a blog post URL and get a clean printable document to read in the sauna.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/wafzal714/sauna-reader.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/wafzal714/sauna-reader/issues"
+  },
+  "homepage": "https://github.com/wafzal714/sauna-reader#readme",
+  "dependencies": {
+    "@mozilla/readability": "^0.6.0",
+    "express": "^5.2.1",
+    "jsdom": "^30.0.0",
+    "node-fetch": "^3.3.2"
+  }
+}

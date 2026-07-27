@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sauna Reader</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="home-wrapper">
+    <header class="home-header">
+      <div class="logo">🧖 Sauna Reader</div>
+      <p class="tagline">Paste a link. Print the article. Enjoy your read in the sauna.</p>
+    </header>
+
+    <main class="home-main">
+      <form id="extract-form" class="extract-form" novalidate>
+        <label for="url-input" class="url-label">Article URL</label>
+        <div class="input-row">
+          <input
+            id="url-input"
+            type="url"
+            name="url"
+            placeholder="https://example.com/article"
+            required
+            autocomplete="off"
+            spellcheck="false"
+          />
+          <button type="submit" id="submit-btn">Get Article</button>
+        </div>
+        <p class="error-msg" id="error-msg" role="alert" aria-live="polite"></p>
+      </form>
+    </main>
+
+    <div id="loading" class="loading hidden" aria-live="polite">
+      <span class="spinner"></span> Fetching article&hellip;
+    </div>
+  </div>
+
+  <!-- Article result overlay -->
+  <div id="result-wrapper" class="result-wrapper hidden">
+    <div class="result-toolbar no-print">
+      <button id="back-btn" class="toolbar-btn">&#8592; Back</button>
+      <button id="print-btn" class="toolbar-btn toolbar-btn--primary">🖨 Print</button>
+    </div>
+
+    <article id="article" class="article">
+      <header class="article-header">
+        <h1 id="article-title"></h1>
+        <p id="article-meta" class="article-meta"></p>
+      </header>
+      <div id="article-content" class="article-content"></div>
+    </article>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
