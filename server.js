@@ -108,6 +108,9 @@ app.post('/extract', async (req, res) => {
 
   let response;
   try {
+    // lgtm[js/request-forgery] - SSRF is mitigated by the custom `safeLookup`
+    // function attached to the agent above, which intercepts every DNS lookup
+    // and rejects connections to private/reserved IP ranges at the TCP level.
     response = await fetch(url, {
       agent,
       headers: {
