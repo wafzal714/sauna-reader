@@ -22,8 +22,9 @@ on:
   workflow_dispatch:
 
 permissions:
-  id-token: write  # required for OIDC login
+  id-token: write      # required for OIDC login
   contents: read
+  administration: write  # required to reset OIDC subject customization to default
 
 jobs:
   test:
@@ -53,6 +54,17 @@ jobs:
       webAppUrl: ${{ steps.bicep.outputs.webAppUrl }}
     steps:
       - uses: actions/checkout@v4
+
+      - name: Reset OIDC subject claim to default
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api \
+            --method PUT \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            /repos/${{ github.repository }}/actions/oidc/customization/sub \
+            -f use_default=true
 
       - name: Azure login (OIDC)
         uses: azure/login@v2
