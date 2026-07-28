@@ -4,6 +4,6 @@
   "parameters": {
     "appName": { "value": "sauna-reader" },
     "skuName": { "value": "B1" },
-    "nodeVersion": { "value": "20-lts" }
+    "nodeVersion": { "value": "22-lts" }
   }
 }
