@@ -17,7 +17,7 @@ param location string = resourceGroup().location
 param skuName string = 'B1'
 
 @description('Node.js runtime version for the Linux web app.')
-param nodeVersion string = '20-lts'
+param nodeVersion string = '22-lts'
 
 var uniqueSuffix = uniqueString(resourceGroup().id)
 var webAppName = toLower('${appName}-${uniqueSuffix}')
@@ -56,7 +56,7 @@ resource webApp 'Microsoft.Web/sites@2023-12-01' = {
         }
         {
           name: 'WEBSITE_NODE_DEFAULT_VERSION'
-          value: '~20'
+          value: '~22'
         }
         {
           // App Service injects PORT automatically; server.js already reads it.
