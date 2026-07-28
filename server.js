@@ -1,7 +1,7 @@
 const express = require('express');
 const { Readability } = require('@mozilla/readability');
 const { JSDOM } = require('jsdom');
-const fetch = require('node-fetch');
+const fetch = require('node-fetch').default;
 const path = require('path');
 const dns = require('dns');
 const net = require('net');
