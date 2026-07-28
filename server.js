@@ -61,11 +61,17 @@ function isPrivateOrReservedIP(ip) {
 // prevents DNS-rebinding / TOCTOU attacks.
 function makeSafeLookup() {
   return function safeLookup(hostname, options, callback) {
-    dns.lookup(hostname, { all: true, ...options }, (err, addresses) => {
+    dns.lookup(hostname, { ...options, all: true }, (err, addresses) => {
       if (err) return callback(err);
-      const safe = addresses.filter(a => !isPrivateOrReservedIP(a.address));
+      const list = Array.isArray(addresses) ? addresses : [addresses];
+      const safe = list.filter(a => !isPrivateOrReservedIP(a.address));
       if (safe.length === 0) {
         return callback(new Error('Hostname resolves to a private or reserved address.'));
+      }
+      // Node's autoSelectFamily path (default in Node 20+) calls lookup with
+      // all:true and expects an array of {address, family} back.
+      if (options && options.all) {
+        return callback(null, safe);
       }
       const chosen = safe[0];
       callback(null, chosen.address, chosen.family);
