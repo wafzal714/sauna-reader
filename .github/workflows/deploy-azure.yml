@@ -19,6 +19,9 @@ on:
   push:
     branches:
       - main
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
@@ -48,6 +51,7 @@ jobs:
     name: Deploy Infrastructure
     runs-on: ubuntu-latest
     needs: test
+    if: github.event_name != 'pull_request'
     outputs:
       webAppName: ${{ steps.bicep.outputs.webAppName }}
       webAppUrl: ${{ steps.bicep.outputs.webAppUrl }}

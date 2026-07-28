@@ -1,5 +1,7 @@
 # 🧖 Sauna Reader
 
+[![Deploy to Azure](https://github.com/wafzal714/sauna-reader/actions/workflows/deploy-azure.yml/badge.svg)](https://github.com/wafzal714/sauna-reader/actions/workflows/deploy-azure.yml)
+
 Paste a link to a blog post or article and get a clean, printable document you can read in the sauna — no phone required.
 
 ## How it works
@@ -33,7 +35,7 @@ PORT=8080 npm start
 
 ## Deploying to Azure
 
-The `infra/` directory contains a [Bicep](https://learn.microsoft.com/azure/azure-resource-manager/bicep/overview) template that provisions an **Azure App Service (Linux, Node 20)** to host the app.
+The `infra/` directory contains a [Bicep](https://learn.microsoft.com/azure/azure-resource-manager/bicep/overview) template that provisions an **Azure App Service (Linux, Node 22)** to host the app.
 
 ### Manual deployment
 
