@@ -144,6 +144,11 @@ app.post('/extract', async (req, res) => {
   }
 
   if (!response.ok) {
+    // 401/403/429 from CDN-fronted sites (e.g. Cloudflare) usually means the
+    // origin server IP is being blocked, not a bad URL.
+    if ([401, 403, 429].includes(response.status)) {
+      return res.status(502).json({ error: `The site blocked this request (HTTP ${response.status}). It likely blocks automated/server access, so it can't be read here.` });
+    }
     return res.status(502).json({ error: `The URL returned HTTP ${response.status}. Please check the URL and try again.` });
   }
 
